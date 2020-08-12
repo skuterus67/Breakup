@@ -1,0 +1,6 @@
+A;Hello, how are you?
+Me;I'm fine, and you?
+A;I'm also fine.
+Me;That's good. Thank you for this conversation.
+A;Likewise. Goodbye.
+Me;Bye.
