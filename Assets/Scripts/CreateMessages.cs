@@ -2,31 +2,60 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Threading;
 
 public class CreateMessages : MonoBehaviour
 {
-    public string application;
-    public string key;
-    public TextAsset file;
+    [SerializeField] string application;
+    [SerializeField] string key;
+    [SerializeField] TextAsset[] files;
     string[] lines;
     string[] author;
     string[] texts;
-    GameObject[] textBubbles;
-    public GameObject bubble;
-    public GameObject parent;
+    Dictionary<string, TextBubble[]> conversations = new Dictionary<string, TextBubble[]>();
+    [SerializeField] TextBubble bubble;
+    [SerializeField] GameObject parent;
 
-
+    
     // Start is called before the first frame update
+    private void Start()
+    {
+        foreach (TextAsset file in files)
+        {
+            CreateMessageBubbles(file);
+        }      
+    }
+    /*
     void Start()
     {
-        ReadFile();
-        CreateBubble(author, texts);
+        //Thread.Sleep(1000);
+        Debug.Log(string.Format("START CREATEMESSAGES: {0} : FRAME {1}", this.GetInstanceID(), Time.frameCount), this);
+        
+    }*/
+
+    public void ShowBubbles(string author)
+    {
+        TextBubble[] bubbles;
+        if (conversations.TryGetValue(author, out bubbles))
+        {
+            foreach (TextBubble bubble in bubbles)
+            {
+                bubble.enabled = true;
+            }
+        }
     }
 
-    public void ReadFile()
+
+    private void CreateMessageBubbles(TextAsset textFile)
+    {
+        ReadFile(textFile);
+        CreateBubble(author, texts);
+    }
+    
+    private void ReadFile(TextAsset textFile)
     {
         string[] temp = new string[2];
-        lines = file.text.Split('\n');
+        lines = textFile.text.Split('\n');
         author = new string[lines.Length];
         texts = new string[lines.Length];
         for (int i=0; i<lines.Length; i++)
@@ -37,21 +66,22 @@ public class CreateMessages : MonoBehaviour
         }
     }
 
-    public void CreateBubble(string[] author, string[] texts)
+    private void CreateBubble(string[] author, string[] texts)
     {
         if (lines != null)
         {
-            textBubbles = new GameObject[lines.Length];
-            for (int i=0; i<lines.Length; i++)
+            string conversationAuthor = "";
+            TextBubble[] textBubbles = new TextBubble[lines.Length];
+            for (int i = 0; i < lines.Length; i++)
             {
-                textBubbles[i] = Instantiate(bubble, 
-                                             parent.transform.GetChild(0).GetChild(0).GetComponent<Transform>().position,
-                                             Quaternion.identity, 
-                                             parent.transform.GetChild(0).GetChild(0).transform);
-                RectTransform rt = (RectTransform)textBubbles[i].transform;
-                textBubbles[i].transform.position = textBubbles[i].transform.position - new Vector3(0, i * rt.rect.height, 0);
-                textBubbles[i].SetActive(true);
-                textBubbles[i].transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>().text = texts[i];
+                
+                textBubbles[i] = Instantiate(bubble,
+                                             parent.transform.position,
+                                             Quaternion.identity,
+                                             parent.transform);
+                textBubbles[i].transform. = false;
+                textBubbles[i].GetComponentInChildren<TextMeshProUGUI>().text = texts[i];
+                Debug.Log(textBubbles[i].GetComponentInChildren<TextMeshProUGUI>().text);
                 if (texts[i].Length >= 22)
                 {
                     textBubbles[i].name = texts[i].Remove(22);
@@ -60,20 +90,40 @@ public class CreateMessages : MonoBehaviour
                 {
                     textBubbles[i].name = texts[i];
                 }
-                
-
                 if (author[i] != "Me")
                 {
-                    textBubbles[i].transform.position = new Vector3(textBubbles[i].transform.GetComponent<Transform>().position.x - rt.rect.width/2, 
-                                                        textBubbles[i].transform.GetComponent<Transform>().position.y, 0);
+                    conversationAuthor = author[i];
+                    Debug.Log(conversationAuthor);
                 }
-                else
-                {
-                    textBubbles[i].transform.position = new Vector3(textBubbles[i].transform.GetComponent<Transform>().position.x + rt.rect.width / 2,
-                                                        textBubbles[i].transform.GetComponent<Transform>().position.y, 0);
-                }
+                
             }
- 
+            MoveBubbles(textBubbles);
+            conversations.Add(conversationAuthor, textBubbles);
+        }
+    }
+
+    private void MoveBubbles(TextBubble[] textBubbles)
+    {
+        int index = 0;
+        foreach (TextBubble textBubble in textBubbles)
+        {
+
+            Canvas.ForceUpdateCanvases();
+            Debug.Log("cm " + textBubbles[index].GetWidth());
+            Debug.Log("cm " + textBubbles[index].GetHeight());
+
+            if (author[index] != "Me")
+            {
+
+                textBubbles[index].GetComponent<RectTransform>().anchoredPosition += new Vector2(0, 0);
+                textBubbles[index].GetComponentInChildren<TextMeshProUGUI>().alignment = TMPro.TextAlignmentOptions.MidlineLeft;
+            }
+            else
+            {
+                textBubbles[index].GetComponent<RectTransform>().anchoredPosition += new Vector2(textBubbles[index].GetWidth(), 0);
+                textBubbles[index].GetComponentInChildren<TextMeshProUGUI>().alignment = TMPro.TextAlignmentOptions.MidlineRight;
+            }
+            index++;
         }
     }
 

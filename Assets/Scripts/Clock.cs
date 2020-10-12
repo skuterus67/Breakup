@@ -15,19 +15,31 @@ public class Clock : MonoBehaviour
     int iClockH;
     int iClockM;
     System.Diagnostics.Stopwatch watch;
+    TextMeshProUGUI TMProUGUI;
+    [SerializeField] float timeSpeed = 5f;
 
     // Start is called before the first frame update
     void Start()
     {
         watch = System.Diagnostics.Stopwatch.StartNew();
+        TMProUGUI = gameObject.GetComponent<TextMeshProUGUI>();
+        StartCoroutine(CountTime());
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (watch.ElapsedMilliseconds % 5000 == 0)
+        
+
+    }
+
+    IEnumerator CountTime()
+    {
+        while (true)
         {
-            clockString = GameObject.Find("ClockText").transform.GetComponent<TMPro.TextMeshProUGUI>().text;
+            yield return new WaitForSeconds(timeSpeed);
+
+            clockString = TMProUGUI.text;
             string[] strlist = clockString.Split(':');
             iClockH = int.Parse(strlist[0]);
             iClockM = int.Parse(strlist[1]);
@@ -61,9 +73,8 @@ public class Clock : MonoBehaviour
             }
 
             clockString = sClockH + ":" + sClockM;
-            GameObject.Find("ClockText").transform.GetComponent<TMPro.TextMeshProUGUI>().text = clockString;
+            TMProUGUI.text = clockString;
         }
-
     }
 
     private string AppendAtPosition(string baseString, int position, string character)
